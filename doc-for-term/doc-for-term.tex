@@ -1,0 +1,184 @@
+\documentclass[b4paper,twocolumn]{oblivoir}
+
+\usepackage{amsmath,amssymb,amsthm,mathtools,mdframed}
+\usepackage{fapapersize}
+
+\usefapapersize{257mm,364mm,30mm,*,30mm,32mm}
+
+\everymath\expandafter{\the\everymath\def\baselinestretch{1.0}\selectfont}
+\everydisplay\expandafter{\the\everydisplay\def\baselinestretch{1.0}\selectfont\abovedisplayskip 8pt plus 2pt minus 2pt%
+  \belowdisplayskip 6.5pt  plus 1pt minus 1pt}
+
+\theoremstyle{definition}
+\newtheorem{problem}{문제}
+\newtheorem*{rem*}{참고}
+
+\newcommand{\boldx}{\mathbf{x}}
+\newcommand{\boldv}{\mathbf{v}}
+\newcommand{\norm}[2]{\left\Vert #1 \right\Vert_{#2}}
+\newcommand{\myd}[1]{\,d{#1}}
+\DeclareMathOperator{\tr}{tr}
+ 
+
+\makepagestyle{teststyle}
+\makeevenhead{teststyle}{}{}{}
+\makeoddhead{teststyle}{}{}{}
+\makeevenfoot{teststyle}{\small 2023 프로그래밍 기초 기말고사}{}{\small \thepage/\thelastpage}
+\makeoddfoot{teststyle}{\small 2023 프로그램 기초}{}{\small \thepage/\thelastpage} 
+
+\newtheorem{prob}{문제}
+
+\pagestyle{teststyle}
+
+%\usepackage{multicol}
+\setlength{\columnseprule}{0.4pt}
+\setlength{\columnsep}{30pt}
+
+\begin{document}
+\twocolumn[
+    \begin{center}
+        \LARGE 프로그래밍 기초 - 기말고사
+    \end{center}
+    \vskip 20pt 
+    
+    \begin{flushright}
+        전공 : \phantom{정보컴퓨터}\\ 
+        학번 : \phantom{정보컴퓨터} \\
+        이름 : \phantom{정보컴퓨터} \\
+    \end{flushright}
+    \vskip 10pt 
+    
+    \begin{mdframed}
+        \begin{itemize}
+            \item 총 문제는 8문제입니다.
+            \item 중간 과정과는 별개로 답안이 정확해야 합니다.
+        \end{itemize}
+    \end{mdframed}
+    \vskip 20pt 
+]
+
+% 문제1
+\begin{problem}[10점]
+절대이상적분가능한 함수 $f$에 대하여 $f$의 푸리에 변환은 
+\[ \hat{f}(s)=\int_{-\infty}^{\infty} f(x)e^{-2\pi isx}\myd{x} \]
+와 같이 정의된다. 이때 다음과 같이 정의된 함수 $f$에 대하여 
+\[
+    f(x)=\begin{cases}
+        1 & \text{if } |x|\leq 1, \\
+        0 & \text{otherwise }
+    \end{cases}
+\]
+$f$의 푸리에 변환이 
+\[   
+    \hat{f}(s)
+    =\begin{cases}
+        \frac{\sin 2\pi s}{\pi s} & s\neq 0, \\
+        2                         & s=0
+    \end{cases}   \]
+임을 보여라. 
+\end{problem}
+\newpage
+
+% 문제2
+\begin{problem}[10점]
+$g\in C^2(\mathbb{R})$이고 $h\in C^1(\mathbb{R})$이라 할 때 다음 초기값 문제를 만족하는 해를 구하라. 
+\[ \left\{
+    \begin{alignedat}{2}
+        u_{tt}-u_{xx}&=0 &&\quad \text{in } \mathbb{R}\times (0,\infty),\\
+        u(x,0)&=g(x) &&\quad x\in \mathbb{R},\\
+        u_t(x,0)&=h(x) &&\quad x\in \mathbb{R}
+    \end{alignedat}
+    \right. \]
+\end{problem}
+\newpage 
+
+\begin{problem}[총 15점]
+$0<\delta<\pi$라 하고 
+\[
+    f(x)=\begin{cases}
+        1 & \text{if } |x|\leq \delta,     \\
+        0 & \text{if } \delta<|x|\leq \pi
+    \end{cases}
+\]
+라 하자. 그리고 $f$가 $2\pi$ 주기를 갖는 함수라고 하자.
+\begin{enumerate}
+    \item[(a)] $f$의 푸리에 계수를 구하라.  [5점]\vspace{0.3\textheight}
+    \item[(b)]  (a)를 바탕으로
+        \[  \sum_{n=1}^\infty \frac{ \sin (n\delta)}{n}=\frac{\pi-\delta}{2},\quad(0<\delta<\pi)  \]
+        임을 보여라. [5점]\newpage 
+    \item[(c)]  Parseval의 항등식을 이용하여
+        \[   \sum_{n=1}^\infty \frac{\sin^2 {(n\delta)}}{n^2\delta} = \frac{\pi-\delta}{2}  \]
+        임을 보여라. [5점] 
+\end{enumerate}
+\end{problem}
+
+\newpage
+
+\begin{problem}[총 20점]
+함수 $f\in \mathcal{S}(\mathbb{R})$라 하자. 즉, 모든 음이 아닌 정수 $m$, $l$에 대하여  
+\[ \max_x \left|x^m \frac{d^l}{dx^l} f(x)\right|\leq C \]
+이 성립하는 상수 $C>0$가 존재한다고 하자.  
+\begin{enumerate} 
+    \item[(a)] $f,g\in \mathcal{S}(\mathbb{R})$일 때 $\widehat{f*g}(s)=\hat{f}(s)\hat{g}(s)$임을 보여라. [5점]\newpage
+    \item[(b)] $f(x)=e^{-\pi x^2}$의 푸리에 변환이 $e^{-\pi s^2}$임을 보여라. [7점]\vspace{0.4\textheight}
+    \item[(c)] (a)와 (b)를 이용하여 다음 열방정식의 초기값 문제를\newline  풀어라. [8점]
+        \[ \left\{
+            \begin{alignedat}{2}
+                u_{t}-u_{xx}&=0 &&\quad \text{in } \mathbb{R}\times (0,\infty),\\
+                u(x,0)&=f(x) &&\quad x\in \mathbb{R}
+            \end{alignedat}
+            \right. \]
+\end{enumerate}
+\end{problem}
+
+\newpage 
+\begin{problem}[20점]
+$B_1\subset \mathbb{R}^3$이 원점을 중심으로 하고 반지름이 1인 구라고 하자. $g$가 $\partial B_1$위에서 연속인 함수라고 할 때 소문항을 따라 그린함수 풀이법으로 이 문제의 해를 찾아라.
+\begin{equation}\label{eq:Dirichlet-problem}
+    \left\{\begin{alignedat}{2}
+        -\nabla^2u&=0 &&\quad \text{in }B_1,\\
+        u&=g &&\quad \text{on }\partial B_1
+    \end{alignedat}\right. 
+\end{equation}
+\end{problem}
+\begin{enumerate}
+    \item[(a)] $x\neq 0$에 대하여 $\tilde{x}=x/|x|^2$라 하자. 이 때 $y\in \partial B_1$이고 $x\neq 0$이면
+        \[   |x|^2|y-\tilde{x}|^2=|x-y|^2  \]
+        임을 보여라. [5점]\vskip 0.3\textheight
+    \item[(b)] $x\neq 0$일 때 $\Phi(x)=\frac{1}{4\pi |x|}$라 하자. $x\in B_1$에 대하여
+        \[   \left\{\begin{alignedat}{2}
+                \nabla^2 \phi^x(y)&=0 &&\quad \text{in }B_1,\\
+                \phi^x(y)&=\Phi(y-x) &&\quad \text{on }\partial B_1
+            \end{alignedat}\right. \]
+        를 만족하는 $\phi^x$를 구하라.  [5점]\newpage 
+    \item[(c)] $x,y\in B_1$, $x\neq y$에 대하여 $G(x,y)=\Phi(x-y)-\phi^x(y)$라 하자. \eqref{eq:Dirichlet-problem}의 해는
+        \[ u(x)=-\int_{\partial B_1} \frac{\partial G}{\partial \nu_y}(x,y)g(y)\myd{\sigma(y)}  \]
+        로 주어진다. 이때 
+        \[  \frac{\partial G}{\partial \nu_y}(x,y) \]
+        를 구하라. [10점]
+\end{enumerate}
+\newpage
+
+\begin{problem}[총 25점]
+다음은 반 평면위에서의 정상 열방정식의 풀이를 구하는 과정을 기술한 것이다.
+\begin{equation}\label{eq:heat}
+    \left\{\begin{alignedat}{2}
+        u_{xx}+u_{yy}&=0&&\quad \text{in } (x,y) \in \mathbb{R}^2_+,\\
+        u(x,0)&=f(x)&&\quad \text{on } x\in \mathbb{R}
+    \end{alignedat}\right.
+\end{equation}
+\begin{enumerate} 
+    \item[(a)] 푸리에 변환을 이용하여 다음식이 성립함을 보여라. [10점]
+        \[ e^{-2\pi|x|}=\int_0^\infty \frac{e^{-u}}{\sqrt{\pi u}} e^{-\pi^2 |x|^2/u} du \]
+        이를 이용하여 푸아송 커널이 
+        \[    P_y(x)=\int_{-\infty}^{\infty} e^{2\pi i sx} e^{-2\pi |x|y} dx  \]
+        와 같이 정의될 때  $P_y(x)$를 구하라.\newline 
+        [Hint: $e^{-2\pi |x|}$의 푸리에 변환이 $\frac{1}{\pi (1+s^2)}$임을 사용하라.  ]
+        \newpage 
+    \item[(b)] $P_y(x)$가 $\mathbb{R}^2_+$에서 조화함수임을 보여라. [8점] \vskip 0.4\textheight
+    \item[(c)] (a)를 이용하여 $f\in \mathcal{S}(\mathbb{R})$일 때 \eqref{eq:heat}의 해가
+        \[ u(x,y)=\int_{-\infty}^{\infty} \frac{y}{\pi (|x-z|^2+y)} f(z)\myd{z}  \]
+        임을 보여라.  [7점]
+\end{enumerate}
+\end{problem}
+\end{document}
