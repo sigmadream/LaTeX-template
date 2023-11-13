@@ -1,0 +1,174 @@
+\section{Ablation Studies}
+\subsection{Effect of Noise Injections}
+ImageNet과 같이 커다란 규모의 데이터셋과 네트워크가 필요한 학습에는 noise의 기여가 굉장히 크다는 사실에 공감할 수 있었다. \cite{xie2020selftraining} 하지만 나는 CIFAR-10과 같이 해상도가 낮고, ResNet-38과 같이 규모가 작은 네트워크에도 이것들이 유용한지 확인해보고 싶었다. 왜냐하면 해상도가 낮은 이미지는 같은 input noise에 대해 유실하는 중요한 정보의 비율이 높을 가능성이 있으며, model noise가 모델의 representability를 축소시켜 학습 효과를 저해할 수도 있다는 생각이 들었기 때문이다. 그래서 나는 각 noise의 정도를 수정하거나 아예 없애는 방식이 학습 과정에 어떤 영향을 주는지 몇 가지 테스트를 해보았다.
+
+표 \ref{ablation_noise}를 보자. 우선 input noise에 해당하는 RandAugment는 강도 27에서 가장 높은 top-1 정확도를 얻을 수 있었으며, 이것이 줄어들수록 더 낮아졌음을 알 수 있었다. 또한 ECE, relative mCE, mFR과 같은 거의 모든 지표에서 강도가 강해짐에 따라 더 좋은 수치가 나타나는 것으로 나타났다. 이로써 input noise가 더 좋은 학습 과정을 유도하는데 크게 기여했음을 알 수 있었다.
+
+하지만 model noise에 대해서는 다소 실망스러운 결과가 나타났다. 오히려 dropout을 없애는 편이 모든 수치에서 더 나은 결과를 가져왔다. Stochastic depth를 지웠을 때 relative mCE에서 robustness가 약간 깨졌지만, 대부분의 수치가 default보다 더 좋았다. 심지어 model noise를 아예 없애는 편이 거의 모든 수치에서 가장 뛰어났다. 이로써 내가 우려하던 model의 크기가 너무 작다는 가설이 어느 정도 맞았음을 알 수 있었다. 원 논문 \cite{xie2020selftraining}의 저자가 말했던 student가 ensemble 역할을 하는 것은, 이 정도 규모의 네트워크에서 무리였던 것 같다.
+
+한 가지 신기했던 결과는, 모든 noise를 없앤 방법이 가장 나쁜 모델을 학습했다는 것이었다. 분명 RandAugment가 있는 상황에서 model noise를 제거하는 것은 긍정적인 결과를 가져왔지만, input noise가 없을 때 제거하는 것은 더 안 좋았다. Student model에 noise가 하나도 없다면 이는 teacher model이 생성한 pseudo label 정보를 곧이 곧대로 수용한 격이 된다. 그래서 네트워크 규모의 팽창에도 불구하고 여러 지표의 향상이 전혀 나타나지 않고, 정답률도 84\%대에 머물렀던 것으로 판단된다.
+
+결국 student model에 noise injection은 필수적이지만, 이를 효과적으로 적용하기 위해서는 underfitting 문제를 겪지 않도록 충분히 representability가 큰 네트워크로 학습해야한다는 사실을 추론할 수 있었다.
+
+\begin{table}[!h]
+  \center 
+  \begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+      Noise Injections & Network & Top-1 Acc. & ECE & Rel. mCE & mFR \\ \hline
+      Default & ResNet-26 & 86.36 & 0.0762 & 103.10 & 86.18 \\
+       & ResNet-32 & 87.58 & 0.0954 & 87.36 & 82.64 \\
+       & ResNet-38 & 88.28 & 0.0814 & 75.61 & 75.11 \\ \hline
+      RandAugment 3 & ResNet-26 & 85.87 & 0.0435 & 105.32 & 95.72 \\
+       & ResNet-32 & 86.84 & 0.1221 & 72.51 & 88.78 \\
+       & ResNet-38 & 87.22 & 0.0989 & 124.61 & 87.45 \\ \hline
+      RandAugment 9 & ResNet-26 & 85.84 & 0.0796 & 86.25 & 96.17 \\
+       & ResNet-32 & 87.02 & 0.1050 & 108.20 & 89.26 \\
+       & ResNet-38 & 87.77 & 0.1012 & 97.12 & 88.00 \\ \hline
+      No RandAugment & ResNet-26 & 85.33 & 0.0842 & 133.48 & 105.97 \\
+       & ResNet-32 & 86.10 & 0.1335 & 152.33 & 109.73 \\
+       & ResNet-38 & 86.37 & 0.1141 & 119.29 & 110.19 \\ \hline
+      Dropout 0.2 & ResNet-26 & 86.60 & 0.0473 & 115.74 & 84.83 \\
+       & ResNet-32 & 88.40 & 0.0810 & 78.71 & 73.46 \\
+       & ResNet-38 & 88.69 & 0.1002 & 88.91 & 69.61 \\ \hline
+      No Dropout & ResNet-26 & 86.62 & 0.0656 & 99.11 & 83.59 \\
+       & ResNet-32 & 88.26 & 0.0791 & 78.05 & 75.92 \\
+       & ResNet-38 & 88.55 & 0.0926 & 52.11 & 73.98 \\ \hline
+      No Stoch. Depth & ResNet-26 & 86.52 & 0.0934 & 79.60 & 84.62 \\
+       & ResNet-32 & 87.81 & 0.1014 & 82.93 & 76.26 \\
+       & ResNet-38 & 88.89 & 0.0942 & 86.92 & 74.20 \\ \hline
+      No Model Noise & ResNet-26 & 86.53 & 0.0775 & 91.57 & 82.58 \\
+       & ResNet-32 & 88.52 & 0.0847 & 102.00 & 75.25 \\
+       & ResNet-38 & 88.74 & 0.0930 & 64.30 & 76.72 \\ \hline
+      No Noise & ResNet-26 & 84.11 & 0.1318 & 154.32 & 111.06 \\
+       & ResNet-32 & 84.35 & 0.1227 & 168.07 & 114.16 \\
+       & ResNet-38 & 84.59 & 0.1305 & 164.30 & 110.77 \\ \hline
+  \end{tabular}
+  \caption{Noise injection별 모델 학습 결과. Default는 학습 기본 설정(stochastic depth, dropout=0.5, RandAugment 27)을 의미한다. Top-1 정확도 외 모두 낮을수록 좋다.}
+  \label{ablation_noise}
+\end{table}
+
+\subsection{Effect of Confidence Threshold on Pseudo Label Generations}
+
+Soft, label smoothing, mixup과 같은 방법을 사용하면 비교적 overconfident 문제에서 자유로워지는 대신, confidence threshold를 넘기는 데이터 수가 적어져 pseudo labeled data가 충분히 확보되지 않는 문제가 발생했다. 이에 대한 해결책으로 confidence threshold를 내리는 방법이 있다. 하지만 teacher가 생성한 pseudo label에 대한 신뢰성은 더 떨어지므로 학습이 제대로 이루어지지 않을 가능성이 있다. 나는 그 중간선이 무엇인지 확인해보고 싶어서 confidence threshold를 0.7, 0.8(default), 0.9로 설정하고 결과를 관찰했다.
+
+\begin{table}[!h]
+  \center 
+  \begin{tabular}{|c|c|c|c|c|c|c|}
+    \hline
+    Label Type & Conf. Thres. & Network & Top-1 Acc. & ECE & Rel. mCE & mFR \\ \hline
+    Hard & 0.7 & ResNet-26 & 86.05 & 0.0675 & 80.27 & 80.98 \\
+     &  & ResNet-32 & 87.49 & 0.0874 & 78.05 & 79.77 \\
+     &  & ResNet-38 & 88.36 & 0.0959 & 88.69 & 73.03 \\ \hhline{|~|-|-|-|-|-|-|}
+     & 0.8 & ResNet-26 & 86.05 & 0.0675 & 80.27 & 80.98 \\
+     &  & ResNet-32 & 87.49 & 0.0874 & 78.05 & 79.77 \\
+     &  & ResNet-38 & 88.36 & 0.0959 & 88.69 & 73.03 \\ \hhline{|~|-|-|-|-|-|-|}
+     & 0.9 & ResNet-26 & 86.83 & 0.0686 & 97.56 & 85.72 \\
+     &  & ResNet-32 & 88.01 & 0.0728 & 88.25 & 75.69 \\
+     &  & ResNet-38 & 88.78 & 0.1028 & 42.13 & 71.87 \\ \hline
+    Soft & 0.7 & ResNet-26 & 86.25 & 0.0354 & 117.07 & 89.46 \\
+     &  & ResNet-32 & 87.19 & 0.0628 & 94.24 & 77.76 \\
+     &  & ResNet-38 & 88.36 & 0.0574 & 79.38 & 75.43 \\ \hhline{|~|-|-|-|-|-|-|}
+     & 0.8 & ResNet-26 & 86.03 & 0.0494 & 77.16 & 85.51 \\
+     &  & ResNet-32 & 87.68 & 0.0355 & 56.54 & 77.60 \\
+     &  & ResNet-38 & 88.21 & 0.0495 & 72.95 & 70.16 \\ \hhline{|~|-|-|-|-|-|-|}
+     & 0.9 & ResNet-26 & 86.46 & 0.0569 & 106.21 & 83.72 \\
+     &  & ResNet-32 & 87.99 & 0.0894 & 77.83 & 76.24 \\
+     &  & ResNet-38 & 88.52 & 0.0800 & 64.08 & 72.54 \\ \hline
+    Smooth & 0.7 & ResNet-26 & 86.56 & 0.0310 & 104.66 & 84.34 \\
+     &  & ResNet-32 & 87.47 & 0.0526 & 89.36 & 77.44 \\
+     &  & ResNet-38 & 88.25 & 0.0628 & 52.77 & 74.17 \\ \hhline{|~|-|-|-|-|-|-|}
+     & 0.8 & ResNet-26 & 86.19 & 0.0328 & 66.30 & 81.52 \\
+     &  & ResNet-32 & 87.73 & 0.0504 & 74.72 & 78.07 \\
+     &  & ResNet-38 & 88.48 & 0.0789 & 76.94 & 73.39 \\ \hhline{|~|-|-|-|-|-|-|}
+     & 0.9 & ResNet-26 & 86.99 & 0.0357 & 88.25 & 80.61 \\
+     &  & ResNet-32 & 86.93 & 0.0494 & 91.57 & 83.67 \\
+     &  & ResNet-38 & 88.12 & 0.0663 & 92.24 & 72.78 \\ \hline
+    Mixup & 0.7 & ResNet-26 & 86.18 & 0.0777 & 67.85 & 84.63 \\
+     &  & ResNet-32 & 86.90 & 0.0379 & 68.29 & 77.12 \\
+     &  & ResNet-38 & 87.74 & 0.0369 & 70.51 & 75.86 \\ \hhline{|~|-|-|-|-|-|-|}
+     & 0.8 & ResNet-26 & 86.34 & 0.1056 & 60.31 & 83.91 \\
+     &  & ResNet-32 & 86.70 & 0.0263 & 68.51 & 80.07 \\
+     &  & ResNet-38 & 87.78 & 0.0780 & 50.11 & 75.58 \\ \hhline{|~|-|-|-|-|-|-|}
+     & 0.9 & ResNet-26 & 86.18 & 0.0539 & 56.98 & 86.06 \\
+     &  & ResNet-32 & 86.68 & 0.1223 & 66.30 & 83.74 \\
+     &  & ResNet-38 & 86.75 & 0.0682 & 55.65 & 85.44 \\ \hline
+  \end{tabular}
+  \caption{각 pseudo label 타입과 confidence threshold별 학습 모델 분석 결과. Top-1 accuracy를 제외하고는 모두 낮은 수치가 좋다.}
+  \label{ablation_confidence}
+\end{table}
+
+표 \ref{ablation_confidence}를 살펴보자. Hard label의 경우 0.9인 상황에서 가장 우수한 top-1 정확도와 앞도적으로 낮은 relative mCE 값을 얻어낼 수 있었다. Overconfident 문제를 보이는 만큼 대부분의 라벨이 높은 confidence로 분류되어 pseudo label이 부족하게 제작되지 않았으며, 따라서 더 신뢰도 있는 데이터를 학습함으로써 나타나는 긍정적인 효과들이 더 두드러졌다.
+
+반면 soft label의 경우 낮은 threshold가 0.9보다 약간 더 나은 결과를 가져왔다. 비록 Top-1 정확도는 0.9가 가장 높긴 했지만(88.52\%) 큰 차이는 아니었고, ECE 값이 threshold가 낮을수록 더 안정되었다. 애초에 soft label은 model 계산의 최대값을 보는게 아니라 confidence 자체를 학습하므로 threshold 문제에서 자유로우며, 때문에 threshold를 낮췄을 때 더 많은 이미지를 학습하여 이득을 보았던 것으로 판단된다.
+
+\begin{table}[!h]
+  \center
+  \begin{tabular}{|c|c|cccccccccc|}
+\hline
+Conf. Thres. & Network & airp. & autom. & bird & cat & deer & dog & frog & horse & ship & truck \\ \hline
+0.7 & ResNet-20 & 4411 & 4742 & 4578 & 4638 & 4668 & 3922 & 4465 & 4390 & 4851 & 4628 \\
+    & ResNet-26 & 4177 & 4716 & 4171 & 4060 & 4631 & 3424 & 4242 & 4165 & 4853 & 4593 \\
+    & ResNet-32 & 4450 & 4846 & 4399 & 4672 & 4972 & 3980 & 4507 & 4399 & 5013 & 4700 \\ \hline
+
+0.8 & ResNet-20 & 4236 & 4673 & 4301 & 4248 & 4430 & 3621 & 4313 & 4226 & 4691 & 4508 \\ 
+    & ResNet-26 & 4046 & 4635 & 3864 & 3344 & 4235 & 3114 & 3997 & 4027 & 4610 & 4494 \\
+    & ResNet-32 & 4330 & 4781 & 4319 & 4045 & 4455 & 3824 & 4278 & 4212 & 4734 & 4620 \\ \hline
+
+0.9 & ResNet-20 & 3951 & 4551 & 3922 & 3684 & 4098 & 3240 & 4081 & 4038 & 4491 & 4335 \\ 
+    & ResNet-26 & 3610 & 4510 & 3603 & 2546 & 3883 & 2580 & 3639 & 3628 & 4287 & 4172 \\
+    & ResNet-32 & 3648 & 4406 & 3661 & 2512 & 3239 & 2233 & 3712 & 3102 & 3999 & 3916 \\ \hline
+  \end{tabular}
+  \caption{Label smoothing 방식. 각 confidence threshold에 따라 teacher model이 생성한 클래스별 학습 데이터의 개수}
+  \label{datagen_smooth_confidence}
+\end{table}
+\begin{table}[!h]
+  \center
+  \begin{tabular}{|c|c|cccccccccc|}
+\hline
+Conf. Thres. & Network & airp. & autom. & bird & cat & deer & dog & frog & horse & ship & truck \\ \hline
+0.7 & ResNet-20 & 4411 & 4742 & 4578 & 4638 & 4668 & 3922 & 4465 & 4390 & 4851 & 4628 \\
+    & ResNet-26 & 4028 & 4506 & 3357 & 2994 & 3531 & 2797 & 3695 & 3762 & 4333 & 4212 \\
+    & ResNet-32 & 4432 & 4726 & 4043 & 3911 & 3997 & 3594 & 4157 & 4135 & 4599 & 4489 \\ \hline
+
+0.8 & ResNet-20 & 4236 & 4673 & 4301 & 4248 & 4430 & 3621 & 4313 & 4226 & 4691 & 4508 \\ 
+    & ResNet-26 & 2926 & 2999 & 2110 & 1759 & 1863 & 1703 & 1476 & 2036 & 3342 & 2853 \\
+    & ResNet-32 & 3999 & 4451 & 3521 & 3301 & 3466 & 3360 & 3747 & 3731 & 4281 & 4288 \\ \hline
+
+0.9 & ResNet-20 & 3951 & 4551 & 3922 & 3684 & 4098 & 3240 & 4081 & 4038 & 4491 & 4335 \\ 
+    & ResNet-26 & 2662 & 1685 & 1870 & 1464 & 1427 & 1346 & 1190 & 1398 & 2979 & 2055 \\
+    & ResNet-32 & 801 & 575 & 594 & 580 & 530 & 538 & 538 & 531 & 838 & 568 \\ \hline 
+  \end{tabular}
+  \caption{Mixup 방식. 각 confidence threshold에 따라 teacher model이 생성한 클래스별 학습 데이터의 개수}
+  \label{datagen_mixup_confidence}
+\end{table}
+
+또한 label smoothing과 mixup 방식에서는 도무지 규칙을 이해할 수 없는 결과가 나타났다. 이를 제대로 고찰하기 위해 각 단계에서 몇 개의 pseudo labeled data를 생성하는지 진단해보았다. 표 \ref{datagen_smooth_confidence}에서와 같이 label smoothing 방식에는 threshold가 0.7, 0.8인 상황에 대해 pseudo label이 매 단계마다 제대로 생성되었음을 확인할 수 있었다. 하지만 0.9인 상황에서는 부실하게 형성되었으며, 따라서 top-1 정확도가 가장 낮았다. 이는 우리가 label smoothing에 사용한 $\epsilon$ 값이 $0.9$였으며, 때문에 가장 강력한 output signal이 이 정도 값에 수렴하여 너무 많은 데이터가 무의미하게 걸러졌기 때문인 것으로 판단된다. 표 \ref{datagen_mixup_confidence}에서 mixup 방식이 pseudo label 데이터를 얼마나 생성하는지 확인했다. Threshold 0.7인 상황에서는 충분히 많은 데이터가 생성되었으나, 낮은 신뢰도 문제로 인해 0.8보다 더 학습도가 떨어졌으며 relative mCE와 같은 수치가 더 높게 나타났다. Threshold 0.9인 상황에서는 마치 mixup+soft label과 같은 상황처럼 부실한 데이터가 형성되어 학습도가 떨어졌으나, 있는 데이터에 대한 신뢰도는 높아 relative mCE와 같은 수치가 좋았음을 알 수 있었다. 이와 같이 confidence threshold를 올리거나 내리는 상황에서 발생하는 여러 tradeoff들을 관찰할 수 있었다.
+
+\subsection{Effect of Labeled Data Ratio}
+나는 초기 학습 데이터의 10\%만 label을 유지하는 방식으로 준 지도학습 상황을 구성했다. 이 비율을 수정했을 때 학습 결과는 어떻게 달라지는지 궁금증이 생겼다. 결국 labeling을 하는 작업은 시간과 돈을 소모하는 작업인데, 이에 대한 효용을 측정할 수 있기 때문이다.
+
+\begin{table}[!h]
+  \center 
+  \begin{tabular}{|c|c|c|c|c|c|c|}
+    \hline
+    Label Type & Init. Label & Network & Top-1 Acc. & ECE & Rel. mCE & mFR \\ \hline
+    Hard & 5\% & ResNet-38 & 85.83 & 0.1117 & 27.27 & 78.76 \\
+     & 10\% & ResNet-38 & 88.28 & 0.0814 & 75.61 & 75.11 \\
+     & 20\% & ResNet-38 & 89.63 & 0.0873 & 58.09 & 67.88 \\ \hline
+    Soft & 5\% & ResNet-38 & 86.00 & 0.0828 & 54.32 & 82.94 \\
+     & 10\% & ResNet-38 & 88.21 & 0.0495 & 72.95 & 70.16 \\
+     & 20\% & ResNet-38 & 89.78 & 0.0628 & 75.39 & 67.52 \\ \hline
+    Smooth & 5\% & ResNet-38 & 86.22 & 0.0857 & 59.42 & 78.17 \\
+     & 10\% & ResNet-38 & 88.48 & 0.0789 & 76.94 & 73.39 \\
+     & 20\% & ResNet-38 & 89.56 & 0.0523 & 64.97 & 68.76 \\ \hline
+    Mixup & 5\% & ResNet-38 & 85.42 & 0.0723 & 38.80 & 89.66 \\
+     & 10\% & ResNet-38 & 87.78 & 0.0780 & 50.11 & 75.58 \\
+     & 20\% & ResNet-38 & 88.70 & 0.0826 & 74.06 & 72.23 \\ \hline
+  \end{tabular}    
+  \caption{각 pseudo label 타입별 robustness 및 calibration error 지표. Top-1 accuracy를 제외하고는 모두 낮은 수치가 좋다.}
+  \label{ratio}
+\end{table}
+
+표 \ref{ratio}에서 나타나는 것과 같이 모든 pseudo label 방식에서 초기 labeled 비율이 높을수록 더 큰 top-1 정확도가 나옴을 관찰할 수 있었다. 특히 soft label의 경우 20\% 비율 시작점에서 거의 90\%에 근접하는 수치가 나타났다. 그러므로 CIFAR-10과 같이 전체 데이터의 수가 적은 상황에서는 최대한 많은 labeled data를 확보하는 과정이 유의미한 효용을 준다는 것을 깨달았다.
+
+비교적 낮은 5\% labeled training set 상황에서 label smoothing 방식이 가장 뛰어났는데, teacher model이 생성한 pseudo label을 신뢰하지 못하는 상황이기 때문인 것으로 파악된다. 또한 5\% 상황에서 비정상적으로 낮은 수준의 relative mCE가 관찰되었다. 각 corruption 별 정답율을 살펴보았다. 이들은 애초에 clean image에 대한 accuracy부터 너무 낮으며, 애초에 어려운 데이터를 이미 clean image에서 다 틀렸기 때문에 $E_{s,c}^f - E_{clean}^f$ 항이 비교적 작게 나와서 그런 것으로 파악되었다.
