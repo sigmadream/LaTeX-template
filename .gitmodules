@@ -1,0 +1,12 @@
+[submodule "tutorial/sample2"]
+	path = tutorial/sample2
+	url = https://github.com/lego0901/noisystudent-cifar10
+[submodule "tutorial/sample1"]
+	path = tutorial/sample1
+	url = https://github.com/kenjihiranabe/The-Art-of-Linear-Algebra
+[submodule "tutorial/sample3"]
+	path = tutorial/sample3
+	url = https://github.com/Code-Clone-Detection-Images/Paper
+[submodule "tutorial/sample4"]
+	path = tutorial/sample4
+	url = https://github.com/hj-n/mnist-cpp-NN-classifier
